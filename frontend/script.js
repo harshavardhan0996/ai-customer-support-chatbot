@@ -35,11 +35,17 @@ async function sendMessage() {
     addTyping();
 
     try {
-        const response = await fetch('http://localhost:5000/chat', {
+        const response = await fetch('http://127.0.0.1:5000/chat', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message })
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: message })
         });
+
+        if (!response.ok) {
+            throw new Error('Server error');
+        }
 
         const data = await response.json();
         removeTyping();
@@ -47,11 +53,12 @@ async function sendMessage() {
         if (data.status === 'success') {
             addMessage(data.response, false);
         } else {
-            addMessage('Sorry, something went wrong!', false);
+            addMessage('Error: ' + data.error, false);
         }
     } catch (error) {
         removeTyping();
-        addMessage('Cannot connect to server!', false);
+        console.error('Error:', error);
+        addMessage('Cannot connect to server! Check if server is running.', false);
     }
 }
 
@@ -62,7 +69,11 @@ userInput.addEventListener('keypress', (e) => {
 });
 
 clearBtn.addEventListener('click', async () => {
-    await fetch('http://localhost:5000/clear', { method: 'POST' });
-    chatMessages.innerHTML = '';
-    addMessage('Chat cleared! How can I help you? 😊', false);
+    try {
+        await fetch('http://127.0.0.1:5000/clear', { method: 'POST' });
+        chatMessages.innerHTML = '';
+        addMessage('Chat cleared! How can I help you? 😊', false);
+    } catch (error) {
+        console.error('Clear error:', error);
+    }
 });
